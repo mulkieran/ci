@@ -27,7 +27,9 @@ from typing import Any, List, Optional
 from urllib.parse import urlparse
 
 import requests
+from build.util import project_wheel_metadata
 from github import Github
+from giturlparse import GitUrlParsed, parse
 from semantic_version import Version
 from specfile import specfile
 
@@ -106,33 +108,26 @@ def edit_specfile(
                 arbitrary(spec)
 
 
-def get_python_package_info(name) -> tuple[Version, Any]:
+def get_python_package_info(name: str) -> tuple[Version, GitUrlParsed]:
     """
     Get info about the python package.
 
     :param str name: the project name
     :returns: Version * ParseResult
     """
-    command = ["python3", "setup.py", "--name"]
-    with subprocess.Popen(command, stdout=subprocess.PIPE) as proc:
-        stdout = proc.stdout
-        assert stdout is not None, "stdout set in subprocess call"
-        assert stdout.readline().strip().decode("utf-8") == name
+    config = project_wheel_metadata(".")
+    assert config.get("Name") == name
 
-    command = ["python3", "setup.py", "--version"]
-    with subprocess.Popen(command, stdout=subprocess.PIPE) as proc:
-        stdout = proc.stdout
-        assert stdout is not None, "stdout set in subprocess call"
-        release_version = Version(stdout.readline().strip().decode("utf-8"))
+    release_version = Version(config.get("version"))
 
-    command = ["python3", "setup.py", "--url"]
+    command = ["git", "remote", "get-url", "origin", "--push"]
     with subprocess.Popen(command, stdout=subprocess.PIPE) as proc:
         stdout = proc.stdout
         assert stdout is not None, "stdout set in subprocess call"
         github_url = stdout.readline().strip().decode("utf-8")
 
-    github_repo = urlparse(github_url)
-    assert github_repo.netloc == "github.com", "specified repo is not on GitHub"
+    github_repo = parse(github_url)
+    assert github_repo.host == "github.com", "specified repo is not on GitHub"
     return (release_version, github_repo)
 
 

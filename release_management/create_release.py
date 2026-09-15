@@ -83,7 +83,7 @@ def _with_dry_run(dry_run):
     return func
 
 
-def _push_tag(repository_url, tag):
+def _push_tag(repository_url: str, tag: str):
     """
     Push a tag.
 
@@ -304,7 +304,7 @@ class PythonPackages:
             return
 
         push_git_url = (
-            repository.geturl() if namespace.git_repo is None else namespace.git_repo
+            repository.url if namespace.git_repo is None else namespace.git_repo
         )
 
         dry_run_caller("__main__._push_tag", lambda: _push_tag(push_git_url, tag))
@@ -315,7 +315,7 @@ class PythonPackages:
                 repository,
                 tag,
                 release_version,
-                get_changelog_url(repository.geturl(), get_branch()),
+                get_changelog_url(repository.url, get_branch()),
             ),
             skip=namespace.no_github_release,
         )
@@ -405,9 +405,7 @@ def _get_parser():
     )
 
     parser.add_argument(
-        "--git-repo",
-        dest="git_repo",
-        help="Use alternate Git repository URL for tag push",
+        "--git-repo", dest="git_repo", help="Git repository URL for tag push"
     )
 
     subparsers = parser.add_subparsers(title="subcommands", required=True)

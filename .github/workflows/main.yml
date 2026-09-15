@@ -17,8 +17,10 @@ jobs:
           # MANDATORY CHECKS USING CURRENT DEVELOPMENT INTERPRETER
           - dependencies: >
               libatomic
+              python3-build
               python3-dbus
               python3-dbus-python-client-gen
+              python3-giturlparse
               python3-matplotlib
               python3-numpy
               python3-pygithub
