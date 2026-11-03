@@ -22,6 +22,7 @@ import subprocess
 import tomllib
 from collections.abc import Callable
 from datetime import datetime
+from functools import partial
 from getpass import getpass
 from typing import Any, List, Optional
 from urllib.parse import urlparse
@@ -142,17 +143,20 @@ def get_package_info(manifest_abs_path, package_name) -> tuple[Version, Any]:
     """
     assert os.path.isabs(manifest_abs_path)
 
-    with open(manifest_abs_path, "rb") as manifest:
-        metadata = tomllib.load(manifest)
+    command = ["cargo", "get", f"--entry={manifest_abs_path}"]
+    run_cargo = partial(subprocess.run, capture_output=True, text=True, check=True)
 
-    package = metadata["package"]
-    assert package["name"] == package_name, (
-        f"package name in Cargo.toml ({package['name']}) != specified"
-        f"package name ({package_name})"
+    name = run_cargo(command + ["package.name"]).stdout.strip()
+    assert name == package_name, (
+        f"package name in Cargo.toml ({name}) != specified package name ({package_name})"
     )
-    github_repo = urlparse(package["repository"].rstrip("/"))
+
+    repository = run_cargo(command + ["package.repository"]).stdout.strip()
+    version = run_cargo(command + ["package.version"]).stdout.strip()
+
+    github_repo = urlparse(repository.rstrip("/"))
     assert github_repo.netloc == "github.com", "specified repo is not on GitHub"
-    return (Version(package["version"]), github_repo)
+    return (Version(version), github_repo)
 
 
 def verify_tag(tag):
