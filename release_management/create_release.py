@@ -304,7 +304,7 @@ class PythonPackages:
             return
 
         push_git_url = (
-            repository.url if namespace.git_repo is None else namespace.git_repo
+            repository.geturl() if namespace.git_repo is None else namespace.git_repo
         )
 
         dry_run_caller("__main__._push_tag", lambda: _push_tag(push_git_url, tag))
@@ -315,7 +315,7 @@ class PythonPackages:
                 repository,
                 tag,
                 release_version,
-                get_changelog_url(repository.url, get_branch()),
+                get_changelog_url(repository.geturl(), get_branch()),
             ),
             skip=namespace.no_github_release,
         )
